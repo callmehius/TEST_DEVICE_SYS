@@ -560,10 +560,11 @@ export default function DeviceCheckPage() {
     const data = await res.json()
 
     console.log("📦 Kết quả IP2Location:", data)
-
-    const isProxy = data.is_proxy === "true" || data.is_proxy === "1"
-    const proxyType = data.proxy_type?.toUpperCase()
-    const isVPN = proxyType === "VPN" || proxyType === "TOR" || proxyType === "DCH"
+    debugger
+    console.log("📦 Kết quả IP2Location:", data.data.is_proxy)
+    const isProxy = data.data.is_proxy === true || data.data.is_proxy === "1"
+    const proxyType = data.data.proxy.proxy_type?.toUpperCase()
+    const isVPN = proxyType !== "RES" ||data.data.country_code?.toUpperCase() != "VN"
     const dnsInfo = data.dns_name || ""
 
     setHasVPN(isVPN)
@@ -685,7 +686,47 @@ export default function DeviceCheckPage() {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
+  //
+  // 🔻 THÊM NGAY SAU ĐÂY:
+const saveSummaryToServer = async () => {
+  const summary = {
+    browserName: browserInfo.name,
+    browserVersion: browserInfo.version,
+    osName: osInfo.name,
+    osVersion: osInfo.version,
+    deviceType,
+  
+    stepsJson: JSON.stringify(steps),
+    cameraStatus,
+    capturedImageBase64: capturedImage,
+    microphoneStatus,
+    audioUrl: audioURL,
+  
+    networkStatus,
+    connectionType,
+    hasVPN,
+    hasStaticDNS,
+    dnsServersJson: JSON.stringify(dnsServers),
+    wifiName:connectionType,
+    email: "s",
+    timestamp: new Date().toISOString(),
+  }
 
+  try {
+    const response = await fetch("https://localhost:7217/api/DeviceSummary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(summary),
+    })
+
+    if (!response.ok) throw new Error("Không thể lưu vào hệ thống")
+    console.log("✔ Đã lưu vào hệ thống")
+  } catch (error) {
+    console.error("❌ Lỗi lưu kết quả:", error)
+  }
+}
   // Hàm để quay lại kiểm tra
   const backToCheck = () => {
     setShowSummary(false)
@@ -1264,20 +1305,15 @@ export default function DeviceCheckPage() {
                       </div>
                       <div className="flex flex-col">
                         <div className="flex items-center">
-                          <span className="text-sm text-muted-foreground mr-2">Trạng thái:</span>
-                          {hasStaticDNS === null ? (
-                            <span>Đang kiểm tra...</span>
-                          ) : hasStaticDNS ? (
-                            <span className="flex items-center text-yellow-600 font-medium">
-                              <AlertTriangle className="h-4 w-4 mr-1" />
-                              Đã phát hiện
-                            </span>
-                          ) : (
-                            <span className="flex items-center text-green-600 font-medium">
-                              <Check className="h-4 w-4 mr-1" />
-                              Không phát hiện
-                            </span>
-                          )}
+                          <a
+                              href="https://itconnect.vlu.edu.vn/blog/post/huong-dan-kiem-tra-go-cai-dat-phan-mem-vpn-tren-laptop-va-thiet-bi-di-dong"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center text-red-600 font-medium"
+                            >
+                              Xem hướng dẫn
+                            </a>
+                          
                         </div>
 
                         {hasStaticDNS && dnsServers.length > 0 && (
@@ -1326,25 +1362,14 @@ export default function DeviceCheckPage() {
                   <div className="mt-4 border rounded-lg p-4 bg-blue-50 border-blue-200">
                     <h3 className="font-medium text-blue-700 mb-2">Hướng dẫn khắc phục</h3>
                     {hasVPN && (
-                      <div className="mb-4">
-                        <h4 className="font-medium text-blue-600 mb-1">Tắt VPN:</h4>
-                        <ul className="list-disc pl-5 space-y-1 text-sm text-blue-700">
-                          <li>
-                            <strong>Windows:</strong> Tìm biểu tượng VPN trong thanh tác vụ (thường ở góc dưới bên
-                            phải), nhấp chuột phải và chọn "Disconnect" hoặc "Exit"
-                          </li>
-                          <li>
-                            <strong>macOS:</strong> Tìm biểu tượng VPN trong thanh menu (thường ở góc trên bên phải),
-                            nhấp vào và chọn "Disconnect" hoặc "Turn Off"
-                          </li>
-                          <li>
-                            <strong>Android:</strong> Mở Settings &gt; Connections/Network &gt; VPN và tắt công tắc VPN
-                          </li>
-                          <li>
-                            <strong>iOS:</strong> Mở Settings &gt; General &gt; VPN và tắt công tắc VPN
-                          </li>
-                        </ul>
-                      </div>
+                      <a
+                      href="https://itconnect.vlu.edu.vn/blog/post/huong-dan-kiem-tra-go-cai-dat-phan-mem-vpn-tren-laptop-va-thiet-bi-di-dong"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-red-600 font-medium"
+                    >
+                      Xem hướng dẫn
+                    </a>
                     )}
 
                     {hasStaticDNS && (
@@ -1649,7 +1674,7 @@ export default function DeviceCheckPage() {
                       )}
                     </p>
                   </div>
-
+{/* 
                   <div className="border rounded-lg p-3">
                     <h4 className="text-sm font-medium mb-1">DNS tĩnh</h4>
                     <p className="text-sm flex items-center">
@@ -1670,7 +1695,7 @@ export default function DeviceCheckPage() {
                     {hasStaticDNS && dnsServers.length > 0 && (
                       <div className="mt-1 text-xs text-muted-foreground">Máy chủ DNS: {dnsServers.join(", ")}</div>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -1738,7 +1763,7 @@ export default function DeviceCheckPage() {
                 Tải báo cáo
               </Button>
             </div>
-            <Button className="gap-2 w-full sm:w-auto">
+            <Button className="gap-2 w-full sm:w-auto" onClick={saveSummaryToServer}>
               <Check className="h-4 w-4" />
               Xác nhận và tiếp tục
             </Button>

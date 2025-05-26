@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -16,69 +15,58 @@ export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
-  // Check if already logged in
+  // Kiểm tra cookie và tự động redirect nếu đã đăng nhập
   useEffect(() => {
-    // For demo purposes, check if auth cookie exists
-    const hasAuthCookie = document.cookie.includes("auth_token=")
+    const allCookies = document.cookie
+    console.log("🍪 Cookie hiện tại:", allCookies)
+
+    const hasAuthCookie = allCookies.includes("auth_token=")
     if (hasAuthCookie) {
-      // Check role
-      const isAdmin = document.cookie.includes("user_role=admin")
-      if (isAdmin) {
-        router.push("/admin")
-      } else {
-        router.push("/device-check")
-      }
+      const isAdmin = allCookies.includes("user_role=admin")
+      router.push(isAdmin ? "/admin" : "/device-check")
     }
   }, [router])
 
+  // Xử lý đăng nhập thường
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate SSO authentication
     setTimeout(() => {
-      setIsLoading(false)
-
-      // For demo purposes:
-      // If username contains "admin", redirect to admin dashboard
-      // Otherwise, redirect to device check
       const isAdmin = username.toLowerCase().includes("admin")
       const role = isAdmin ? "admin" : "user"
 
-      // Set cookies instead of localStorage
-      setCookie("auth_token", "demo_token_" + Date.now(), 7) // 7 days expiry
+      // Đặt cookie (dùng JS để chắc chắn có)
+      setCookie("auth_token", "demo_token_" + Date.now(), 7)
       setCookie("user_role", role, 7)
 
-      if (isAdmin) {
-        router.push("/admin")
-      } else {
-        router.push("/device-check")
-      }
+      console.log("✅ Cookie sau login thường:", document.cookie)
+
+      router.push(isAdmin ? "/admin" : "/device-check")
+      setIsLoading(false)
     }, 1500)
   }
 
-  const handleSSOLogin = () => {
+  // Xử lý đăng nhập SSO
+  const handleSSOLogin = async () => {
     setIsLoading(true)
+    try {
+      const res = await fetch("https://localhost:7217/api/Auth/sso-url")
+      const text = await res.text()
 
-    // Simulate SSO authentication
-    setTimeout(() => {
+      console.log("📦 Raw response:", text)
+      console.log("🔍 Status:", res.status)
+      console.log("🔍 Content-Type:", res.headers.get("content-type"))
+
+      const data = JSON.parse(text)
+
+      // Điều hướng người dùng đến Azure AD để đăng nhập
+      window.location.href = data.ssoUrl
+    } catch (err) {
+      console.error("❌ Lỗi khi gọi API hoặc JSON parse:", err)
+      alert("Không thể khởi tạo đăng nhập SSO")
       setIsLoading(false)
-
-      // For demo purposes, randomly assign admin or user role
-      // In a real app, this would come from the SSO provider
-      const isAdmin = Math.random() > 0.8 // 20% chance to be admin
-      const role = isAdmin ? "admin" : "user"
-
-      // Set cookies instead of localStorage
-      setCookie("auth_token", "demo_token_" + Date.now(), 7) // 7 days expiry
-      setCookie("user_role", role, 7)
-
-      if (isAdmin) {
-        router.push("/admin")
-      } else {
-        router.push("/device-check")
-      }
-    }, 1500)
+    }
   }
 
   return (
@@ -92,37 +80,16 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Tên đăng nhập</Label>
-              <Input
-                id="username"
-                placeholder="Nhập tên đăng nhập"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
+              <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Mật khẩu</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Nhập mật khẩu"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang đăng nhập...
-                </>
-              ) : (
-                "Đăng nhập"
-              )}
+              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Đang đăng nhập...</> : "Đăng nhập"}
             </Button>
           </form>
-
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
@@ -131,16 +98,8 @@ export default function LoginPage() {
               <span className="bg-white px-2 text-gray-500">Hoặc</span>
             </div>
           </div>
-
           <Button variant="outline" className="w-full" onClick={handleSSOLogin} disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Đang xử lý...
-              </>
-            ) : (
-              "Đăng nhập với SSO"
-            )}
+            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Đang xử lý...</> : "Đăng nhập với SSO"}
           </Button>
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">

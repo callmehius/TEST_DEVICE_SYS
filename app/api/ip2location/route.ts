@@ -7,7 +7,7 @@ export async function GET() {
       const userIP = ipData.ip
   
       // 2. Gọi API IP2Location từ server
-      const res = await fetch(`https://api.ip2location.io/?key=31EEEC278EDD716F35D4F250868FC159&ip=${userIP}`)
+      const res = await fetch(`https://api.ip2location.io/?key=7DB9F0A65A8580FD8D70FD1504A73791&ip=${userIP}`)
       const data = await res.json()
   
       return Response.json({ success: true, ip: userIP, data })
