@@ -713,7 +713,7 @@ const saveSummaryToServer = async () => {
   }
 
   try {
-    const response = await fetch("https://localhost:7217/api/DeviceSummary", {
+    const response = await fetch("https://172.16.3.52/api/DeviceSummary", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

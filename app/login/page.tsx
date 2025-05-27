@@ -51,7 +51,12 @@ export default function LoginPage() {
   const handleSSOLogin = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch("https://localhost:7217/api/Auth/sso-url")
+      const res = await fetch("https://172.16.3.52/api/Auth/sso-url", {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        }
+      })
       const text = await res.text()
 
       console.log("📦 Raw response:", text)
