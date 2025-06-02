@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getCookie } from "@/lib/cookies"
 import {
   Camera,
   Check,
@@ -26,6 +27,7 @@ import {
   Shield,
   Download,
 } from "lucide-react"
+import { set } from "date-fns"
 
 export default function DeviceCheckPage() {
   const router = useRouter()
@@ -68,6 +70,7 @@ export default function DeviceCheckPage() {
   const [networkStatus, setNetworkStatus] = useState<"checking" | "success" | "warning" | "error">("checking")
   const [networkMessage, setNetworkMessage] = useState("Đang kiểm tra kết nối mạng...")
   const [connectionType, setConnectionType] = useState<string | null>(null)
+  const [connectionIp, setConnectIp] = useState<string | null>(null)
   const [hasVPN, setHasVPN] = useState<boolean | null>(null)
   const [hasStaticDNS, setHasStaticDNS] = useState<boolean | null>(null)
   const [showNetworkInstructions, setShowNetworkInstructions] = useState(false)
@@ -477,96 +480,46 @@ export default function DeviceCheckPage() {
     setNetworkStatus("checking")
     setNetworkMessage("Đang kiểm tra kết nối mạng...")
     setConnectionType(null)
+    setConnectIp(null)
     setHasVPN(null)
     setHasStaticDNS(null)
     setDnsServers([])
 
     try {
+      debugger
       // Detect connection type (WiFi/LAN)
       const connection =
         (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
 
-      if (connection) {
-        if (connection.type) {
-          setConnectionType(
-            connection.type === "wifi" ? "WiFi" : connection.type === "ethernet" ? "LAN" : "Không xác định",
-          )
-        } else {
-          // Fallback detection based on connection properties
-          if (connection.downlink > 10) {
-            setConnectionType("LAN (có thể)")
-          } else {
-            setConnectionType("WiFi (có thể)")
-          }
-        }
-      } else {
-        setConnectionType("Không xác định")
-      }
-
-      // Thử phát hiện tên WiFi (chỉ hoạt động trong một số trường hợp do giới hạn bảo mật)
-      // try {
-      //   // Mô phỏng tên WiFi (trong ứng dụng thực tế, cần sử dụng API phía máy chủ)
-      //   // Trong trình duyệt web, việc lấy tên WiFi trực tiếp bị giới hạn vì lý do bảo mật
-      //   setTimeout(() => {
-      //     if (connectionType?.includes("WiFi")) {
-      //       // Mô phỏng tên WiFi
-      //       const mockWifiNames = ["WiFi-Home", "TP-Link_2.4GHz", "VNPT_2.4G", "FPT_Telecom", "Viettel Telecom"]
-      //       const randomWifi = mockWifiNames[Math.floor(Math.random() * mockWifiNames.length)]
-      //       setWifiName(randomWifi)
-      //     } else {
-      //       setWifiName(null)
-      //     }
-      //   }, 1000)
-      // } catch (error) {
-      //   console.error("Error detecting WiFi name:", error)
-      //   setWifiName(null)
-      // }
-
-      // Simulate VPN and Static DNS detection
-      // In a real application, this would need to be done server-side
-      // setTimeout(() => {
-      //   // This is a simulation - in a real app, you'd need to check this server-side
-      //   const simulatedVPN = Math.random() > 0.5
-      //   const simulatedStaticDNS = Math.random() > 0.5
-
-      //   // Mô phỏng các DNS server được phát hiện
-      //   const simulatedDnsServers = simulatedStaticDNS
-      //     ? ["8.8.8.8", "8.8.4.4"] // Google DNS
-      //     : []
-
-      //   setHasVPN(simulatedVPN)
-      //   setHasStaticDNS(simulatedStaticDNS)
-      //   setDnsServers(simulatedDnsServers)
-
-      //   // Set network status based on detection
-      //   if (simulatedVPN || simulatedStaticDNS) {
-      //     setNetworkStatus("warning")
-      //     setNetworkMessage(
-      //       `Phát hiện ${simulatedVPN && simulatedStaticDNS ? "VPN và DNS tĩnh" : simulatedVPN ? "VPN" : "DNS tĩnh"}. Điều này có thể ảnh hưởng đến kết nối.`,
-      //     )
-      //   } else {
-      //     setNetworkStatus("success")
-      //     setNetworkMessage("Kết nối mạng bình thường.")
-      //   }
-      // }, 1500)
-      // 1. Lấy IP người dùng từ trình duyệt (sẽ là IP public nếu gọi từ server thì chính xác hơn)
     const resIP = await fetch("https://api.ipify.org?format=json")
     const ipData = await resIP.json()
     const userIP = ipData.ip
     console.log("📡 IP người dùng:", userIP)
 
     // 2. Gọi API IP2Location
-    const res = await fetch("/api/ip2location")
+    const res = await fetch(`https://api.ip2location.io/?key=7DB9F0A65A8580FD8D70FD1504A73791&ip=${userIP}`)
     const data = await res.json()
+  
 
     console.log("📦 Kết quả IP2Location:", data)
     debugger
-    console.log("📦 Kết quả IP2Location:", data.data.is_proxy)
-    const isProxy = data.data.is_proxy === true || data.data.is_proxy === "1"
-    const proxyType = data.data.proxy.proxy_type?.toUpperCase()
-    const isVPN = proxyType !== "RES" ||data.data.country_code?.toUpperCase() != "VN"
+    console.log("📦 Kết quả IP2Location:", data.is_proxy)
+    const isProxy = data.is_proxy === true || data.is_proxy === "1"
+    const proxyType = data.proxy.proxy_type?.toUpperCase()
+    const isVPN = proxyType !== "RES" ||data.country_code?.toUpperCase() != "VN"
     const dnsInfo = data.dns_name || ""
+    if (connection) {
+        
+          // Fallback detection based on connection properties
+          if (connection.downlink > 10) {
+            setConnectionType(`LAN (có thể)<br />Tốc độ downlink ${connection.downlink} Mbps<br />IP kết nối ${data.ip}`);
+          } else {
+            setConnectionType(`Wifi (có thể)<br />Tốc độ downlink ${connection.downlink} Mbps<br />IP kết nối ${data.ip}`);
+          }
 
+      } else {
+        setConnectionType("Không xác định")
+      }
     setHasVPN(isVPN)
     setHasStaticDNS(!!dnsInfo)
     setDnsServers(dnsInfo ? [dnsInfo] : [])
@@ -708,23 +661,30 @@ const saveSummaryToServer = async () => {
     hasStaticDNS,
     dnsServersJson: JSON.stringify(dnsServers),
     wifiName:connectionType,
-    email: "s",
+    email: getCookie("email"),
     timestamp: new Date().toISOString(),
   }
 
   try {
-    const response = await fetch("https://172.16.3.52/api/DeviceSummary", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(summary),
-    })
-
+    const token = getCookie("auth_token")
+    if (!token) {
+      console.error("❌ Không tìm thấy auth_token trong cookie")
+      return
+    }
+    const response = await fetch("https://localhost:7217/api/DeviceSummary", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(summary),
+  });
+    debugger
     if (!response.ok) throw new Error("Không thể lưu vào hệ thống")
-    console.log("✔ Đã lưu vào hệ thống")
+    alert("✔ Thiết bị đã được lưu vào hệ thống thành công!");
+  location.reload();
   } catch (error) {
-    console.error("❌ Lỗi lưu kết quả:", error)
+    alert("❌ Đã xảy ra lỗi khi lưu thiết bị");
   }
 }
   // Hàm để quay lại kiểm tra
@@ -1265,7 +1225,7 @@ const saveSummaryToServer = async () => {
                       </div>
                       <div>
                         <span className="text-sm text-muted-foreground">Kết nối:</span>
-                        <p className="font-medium">{connectionType || "Không xác định"}</p>
+                        <p className="font-medium" dangerouslySetInnerHTML={{ __html: connectionType || "Không xác định"}}></p>
                         {connectionType?.includes("WiFi") && wifiName && (
                           <div className="mt-1">
                             <span className="text-sm text-muted-foreground">Tên WiFi:</span>
@@ -1311,7 +1271,7 @@ const saveSummaryToServer = async () => {
                               rel="noopener noreferrer"
                               className="flex items-center text-red-600 font-medium"
                             >
-                              Xem hướng dẫn
+                              Phần này GV/SV cần tự kiểm tra thủ công. Nhấn vào đây để xem hướng dẫn
                             </a>
                           
                         </div>
@@ -1426,11 +1386,11 @@ const saveSummaryToServer = async () => {
             </Button>
             <Button
               onClick={goToNextStep}
-              disabled={
-                currentStep === 2
-                  ? !(cameraStatus === "success" && (showCameraPreview || cameraInitialized))
-                  : !canProceed()
-              }
+              // disabled={
+              //   currentStep === 2
+              //     ? !(cameraStatus === "success" && (showCameraPreview || cameraInitialized))
+              //     : !canProceed()
+              // }
               className="gap-2"
             >
               {currentStep < 4 ? (

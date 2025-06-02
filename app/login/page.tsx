@@ -16,16 +16,50 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
 
   // Kiểm tra cookie và tự động redirect nếu đã đăng nhập
-  useEffect(() => {
-    const allCookies = document.cookie
-    console.log("🍪 Cookie hiện tại:", allCookies)
+useEffect(() => {
+  const allCookies = document.cookie
+  const hasAuthCookie = allCookies.includes("auth_token=")
 
-    const hasAuthCookie = allCookies.includes("auth_token=")
-    if (hasAuthCookie) {
-      const isAdmin = allCookies.includes("user_role=admin")
-      router.push(isAdmin ? "/admin" : "/device-check")
-    }
-  }, [router])
+  if (hasAuthCookie) {
+    const isAdmin = allCookies.includes("user_role=admin")
+    router.push(isAdmin ? "/admin" : "/device-check")
+    return
+  }
+
+  // 🆕 Check nếu có mã `code` từ Azure redirect về
+  const urlParams = new URLSearchParams(window.location.search)
+  const code = urlParams.get("code")
+
+  if (code) {
+    console.log("🔁 Nhận được code từ Azure:", code)
+    setIsLoading(true)
+
+    fetch("https://localhost:7217/api/Auth/sso-callback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.token) {
+          // 🧠 Có thể lưu token vào localStorage nếu dùng Authorization header
+          setCookie("auth_token", data.token, 7)
+          setCookie("user_role", data.role, 7)
+          console.log("✅ Đăng nhập SSO thành công:", data)
+
+          router.push(data.role === "admin" ? "/admin" : "/device-check")
+        } else {
+          alert("❌ Không lấy được token từ SSO")
+        }
+      })
+      .catch(err => {
+        console.error("❌ Lỗi khi gọi sso-callback:", err)
+        alert("Lỗi xác thực")
+      })
+      .finally(() => setIsLoading(false))
+  }
+}, [router])
+
 
   // Xử lý đăng nhập thường
   const handleLogin = async (e: React.FormEvent) => {
@@ -51,7 +85,7 @@ export default function LoginPage() {
   const handleSSOLogin = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch("https://172.16.3.52/api/Auth/sso-url", {
+      const res = await fetch("https://localhost:7217/api/Auth/sso-url", {
         method: "GET",
         headers: {
           "Accept": "application/json"
