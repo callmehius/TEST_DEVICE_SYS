@@ -34,7 +34,7 @@ useEffect(() => {
     console.log("🔁 Nhận được code từ Azure:", code)
     setIsLoading(true)
 
-    fetch("https://localhost:7217/api/Auth/sso-callback", {
+    fetch("https://demo.vlu.edu.vn/api/Auth/sso-callback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code })
@@ -85,7 +85,7 @@ useEffect(() => {
   const handleSSOLogin = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch("https://localhost:7217/api/Auth/sso-url", {
+      const res = await fetch("https://demo.vlu.edu.vn/api/Auth/sso-url", {
         method: "GET",
         headers: {
           "Accept": "application/json"
@@ -116,29 +116,9 @@ useEffect(() => {
           <CardDescription>Đăng nhập để tiếp tục sử dụng hệ thống</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Tên đăng nhập</Label>
-              <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Đang đăng nhập...</> : "Đăng nhập"}
-            </Button>
-          </form>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">Hoặc</span>
-            </div>
-          </div>
+
           <Button variant="outline" className="w-full" onClick={handleSSOLogin} disabled={isLoading}>
-            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Đang xử lý...</> : "Đăng nhập với SSO"}
+            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Đang xử lý...</> : "Đăng nhập với tài khoản VLU"}
           </Button>
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">

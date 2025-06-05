@@ -24,7 +24,7 @@ export default function SsoCallbackPage() {
       try {
         console.log("📡 Gửi mã code tới backend:", code)
 
-        const res = await fetch("https://localhost:7217/api/Auth/sso-callback", {
+        const res = await fetch("https://demo.vlu.edu.vn/api/Auth/sso-callback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code })
