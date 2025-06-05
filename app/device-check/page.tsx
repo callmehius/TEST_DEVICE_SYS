@@ -584,21 +584,25 @@ export default function DeviceCheckPage() {
         setNetworkStatus("warning");
         message = "Nên kết nối vào Wifi - THI để truy cập làm bài thi CTE";
       }
-      if (data.isInRangeIp == true && data.ipAddresses !== data?.json?.ip) {
+      if (data.isInRangeIp == true && (data.isVpn == true || data.isDNS == true)) {
          setHasVPN(true);
         setHasStaticDNS(true);
         setNetworkStatus("warning");
         message =
           message +
-          ".<br>Đã kết nối Wifi - THI.<br>Nhưng thiết bị đang có cài đặt VPN/DNS có thể ảnh hưởng kết nối mạng";
-      } else if (!data?.jsonDNS?.dns?.geo?.includes("Vietnam")) {
+          `<br>Nhưng thiết bị đang có cài đặt "VPN/DNS tĩnh/Hoặc có kết nối internet bên ngoài" có thể ảnh hưởng đến truy cập hệ thống thi.`;
+      } else if ((data.isVpn == true || data.isDNS == true)) {
         setHasVPN(true);
         setHasStaticDNS(true);
         setNetworkStatus("warning");
         message =
           message +
-          `.<br>Phát hiện "VPN/DNS tĩnh" : ${data.jsonDNS.dns.geo}.<br>Điều này có thể ảnh hưởng đến kết nối mạng.`;
-        setDnsServers(data.jsonDNS.dns.geo);
+          `.<br>Phát hiện "VPN/DNS tĩnh/Hoặc có kết nối internet bên ngoài" : ${data?.jsonDns?.dns?.geo}.<br>Điều này có thể ảnh hưởng đến truy cập hệ thống thi.`;
+        setDnsServers(data?.jsonDns?.dns?.geo);
+      }
+      else{
+        setHasVPN(false);
+        setHasStaticDNS(false);
       }
       setNetworkMessage(message);
 
@@ -1391,7 +1395,12 @@ export default function DeviceCheckPage() {
                   <div>
                     <h3 className="font-medium">Kết nối mạng</h3>
                     <div>
-                      {networkStatus === "warning" ? (
+                      {networkStatus === "success" ? (
+                        <p
+                          className="text-sm text-green-600 text-muted-foreground"
+                          dangerouslySetInnerHTML={{ __html: networkMessage }}
+                        ></p>
+                      ) : networkStatus === "warning" ? (
                         <p
                           className="text-sm text-red-600 text-muted-foreground"
                           dangerouslySetInnerHTML={{ __html: networkMessage }}
@@ -1437,7 +1446,7 @@ export default function DeviceCheckPage() {
                     <div className="border rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Globe className="h-5 w-5 text-primary" />
-                        <h3 className="font-medium">VPN/DNS tĩnh</h3>
+                        <h3 className="font-medium">VPN/DNS tĩnh/Hoặc kết nối internet bên ngoài</h3>
                       </div>
                       <div className="flex flex-col">
                         <div>
@@ -1559,6 +1568,7 @@ export default function DeviceCheckPage() {
                             tượng VPN app &gt; Remove App.
                           </li>
                         </ul>
+                        <h4  className="font-medium text-red-600 mb-1 mt-4">Nếu thiết bị không có cài đặt VPN/DNS tĩnh. Bạn có thể đến trường kết nối lại Wifi-Thi truy cập hệ thống kiểm tra lại.</h4>
                       </div>
                     }
                   </div>
