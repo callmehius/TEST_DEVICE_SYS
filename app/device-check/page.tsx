@@ -622,16 +622,6 @@ export default function DeviceCheckPage() {
       } else {
         setConnectionType("Loại mạng không xác định");
       }
-      fetch('https://edns.ip-api.com/json')
-      .then((res) => res.json())
-      .then((data) => {
-        // setDnsInfo(data.dns);
-        // setEdnsInfo(data.edns || null);
-      })
-      .catch((err) => {
-        // setError('Lỗi khi lấy thông tin EDNS');
-        console.error(err);
-      });
     } catch (error) {
       console.error("Network check error:", error);
       setNetworkStatus("error");
