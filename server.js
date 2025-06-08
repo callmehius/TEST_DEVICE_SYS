@@ -1,20 +1,21 @@
-// server.js
-const fs = require('fs');
-const https = require('https');
-const next = require('next');
-
-const app = next({ dev: false });
-const handle = app.getRequestHandler();
-
-const httpsOptions = {
-  key: fs.readFileSync('./ssl/private.key'),
-  cert: fs.readFileSync('./ssl/certificate.crt')
-};
-
+import { createServer } from 'http'
+import { parse } from 'url'
+import next from 'next'
+ 
+const port = parseInt(process.env.PORT || '3000', 10)
+const dev = process.env.NODE_ENV !== 'production'
+const app = next({ dev })
+const handle = app.getRequestHandler()
+ 
 app.prepare().then(() => {
-  https.createServer(httpsOptions, (req, res) => {
-    handle(req, res);
-  }).listen(443, '0.0.0.0', () => {
-    console.log('> Server ready on https://demo.vlu.edu.vn');
-  });
-});
+  createServer((req, res) => {
+    const parsedUrl = parse(req.url, true)
+    handle(req, res, parsedUrl)
+  }).listen(port)
+ 
+  console.log(
+    `> Server listening at http://localhost:${port} as ${
+      dev ? 'development' : process.env.NODE_ENV
+    }`
+  )
+})
