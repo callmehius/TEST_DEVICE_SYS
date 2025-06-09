@@ -34,7 +34,7 @@ useEffect(() => {
     console.log("🔁 Nhận được code từ Azure:", code)
     setIsLoading(true)
 
-    fetch("https://demo.vlu.edu.vn/api/Auth/sso-callback", {
+    fetch("https://hoclieudethi.vlu.edu.vn/api/Auth/sso-callback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code })
@@ -85,7 +85,7 @@ useEffect(() => {
   const handleSSOLogin = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch("https://demo.vlu.edu.vn/api/Auth/sso-url", {
+      const res = await fetch("https://hoclieudethi.vlu.edu.vn/api/Auth/sso-url", {
         method: "GET",
         headers: {
           "Accept": "application/json"

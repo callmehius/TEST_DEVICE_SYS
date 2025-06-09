@@ -566,7 +566,7 @@ export default function DeviceCheckPage() {
       //   console.error("❌ Không tìm thấy auth_token trong cookie");
       //   return;
       // }
-      const response = await fetch("https://demo.vlu.edu.vn/api/DeviceSummary", {
+      const response = await fetch("https://hoclieudethi.vlu.edu.vn/api/DeviceSummary", {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -767,7 +767,7 @@ export default function DeviceCheckPage() {
         console.error("❌ Không tìm thấy auth_token trong cookie");
         return;
       }
-      const response = await fetch("https://demo.vlu.edu.vn/api/DeviceSummary", {
+      const response = await fetch("https://hoclieudethi.vlu.edu.vn/api/DeviceSummary", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
